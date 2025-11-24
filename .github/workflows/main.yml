@@ -1,0 +1,41 @@
+name: Build and Deploy to cPanel
+
+on:
+  push:
+    branches:
+      - main  # Change this to 'master' if your branch is named master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Check out the code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Set up Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Use the version that matches your local environment
+          cache: 'npm'
+
+      # 3. Install Dependencies and Build
+      - name: Install and Build
+        run: |
+          npm ci
+          npm run build
+        # 'npm ci' is faster/cleaner than 'npm install' for CI environments
+        # This creates a 'dist' folder by default in Vite
+
+      # 4. Deploy to Server via SSH
+      - name: Deploy to cPanel
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ secrets.HOST }}
+          REMOTE_USER: ${{ secrets.USERNAME }}
+          TARGET: ${{ secrets.TARGET_DIR }}
+          SOURCE: "dist/" 
+          # 'dist/' is the folder Vite creates. We only upload the CONTENTS of this folder.
