@@ -25,14 +25,14 @@ export const AspectRatioSelector: React.FC<AspectRatioSelectorProps> = ({ value,
             key={ratio.id}
             onClick={() => onChange(ratio.id)}
             className={`
-              flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-medium transition-all
+              flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-medium transition-all backdrop-blur-sm
               ${value === ratio.id 
-                ? 'bg-indigo-50 border-indigo-600 text-indigo-700 ring-1 ring-indigo-600' 
-                : 'bg-white border-gray-200 text-gray-600 hover:border-indigo-200 hover:bg-gray-50'
+                ? 'bg-indigo-50/50 border-indigo-500/50 text-indigo-700 ring-1 ring-indigo-500/50' 
+                : 'bg-white/40 border-white/40 text-gray-600 hover:border-indigo-200/50 hover:bg-white/60'
               }
             `}
           >
-            <div className={`mb-1.5 ${value === ratio.id ? 'text-indigo-600' : 'text-gray-400'}`}>
+            <div className={`mb-1.5 ${value === ratio.id ? 'text-indigo-600' : 'text-gray-500'}`}>
               {ratio.icon}
             </div>
             {ratio.id}

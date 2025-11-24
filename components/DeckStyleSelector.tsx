@@ -169,15 +169,15 @@ export const DeckStyleSelector: React.FC<DeckStyleSelectorProps> = ({ onSelect, 
             key={style.id}
             onClick={() => onSelect(style)}
             className={`
-              relative group flex flex-col items-start p-3 rounded-xl border text-left transition-all duration-200
+              relative group flex flex-col items-start p-3 rounded-xl border text-left transition-all duration-200 backdrop-blur-sm
               ${selectedStyleId === style.id 
-                ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600 shadow-md' 
-                : 'border-gray-200 bg-white hover:border-indigo-300 hover:shadow-md hover:-translate-y-0.5'
+                ? 'border-indigo-500/50 bg-indigo-50/50 ring-1 ring-indigo-500/50 shadow-md' 
+                : 'border-white/40 bg-white/40 hover:border-white/60 hover:bg-white/60 hover:shadow-md hover:-translate-y-0.5'
               }
             `}
           >
             {/* Visual Thumbnail Container */}
-            <div className="w-full aspect-video rounded-lg mb-3 shadow-sm relative overflow-hidden border border-gray-100 bg-gray-50">
+            <div className="w-full aspect-video rounded-lg mb-3 shadow-sm relative overflow-hidden border border-white/40 bg-white/50">
                {renderThumbnailContent(style)}
             </div>
 

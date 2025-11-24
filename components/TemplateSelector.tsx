@@ -36,16 +36,16 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({ onSelect, se
             key={template.id}
             onClick={() => onSelect(template)}
             className={`
-              relative flex flex-col items-start p-3 rounded-xl border text-left transition-all duration-200
+              relative flex flex-col items-start p-3 rounded-xl border text-left transition-all duration-200 backdrop-blur-sm
               ${selectedTemplateId === template.id 
-                ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600' 
-                : 'border-gray-200 bg-white hover:border-indigo-300 hover:shadow-sm'
+                ? 'border-indigo-500/50 bg-indigo-50/50 ring-1 ring-indigo-500/50' 
+                : 'border-white/40 bg-white/40 hover:bg-white/60 hover:border-white/60 hover:shadow-sm'
               }
             `}
           >
             <div className={`
-              mb-2 p-1.5 rounded-md inline-flex
-              ${selectedTemplateId === template.id ? 'bg-indigo-200 text-indigo-700' : 'bg-gray-100 text-gray-500'}
+              mb-2 p-1.5 rounded-md inline-flex backdrop-blur-sm
+              ${selectedTemplateId === template.id ? 'bg-indigo-200/60 text-indigo-700' : 'bg-white/50 text-gray-500'}
             `}>
               {getIcon(template.category)}
             </div>

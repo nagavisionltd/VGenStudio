@@ -138,10 +138,7 @@ export default function App() {
         if (deckInputMode === 'file') inputData = ''; 
         if (deckInputMode === 'voice') inputData = '';
 
-        // Determine correct audio source (Blob or File)
         const audioSource = voiceBlob || voiceFile;
-        // Since generatePitchDeck expects Blob | null for audio, and File extends Blob, this is compatible.
-        // However, typescript might complain if strict, but File IS A Blob.
 
         const slides = await generatePitchDeck(
           inputData, 
@@ -171,20 +168,20 @@ export default function App() {
   }, [previewUrl]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen flex flex-col font-sans text-gray-900">
       <Header />
       
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {/* Mode Tabs */}
         <div className="flex justify-center mb-8">
-          <div className="bg-white p-1 rounded-xl shadow-sm border border-gray-200 inline-flex flex-wrap justify-center gap-1">
+          <div className="bg-white/40 backdrop-blur-md p-1 rounded-2xl shadow-lg border border-white/50 inline-flex flex-wrap justify-center gap-1">
             <button
               onClick={() => handleModeChange('transform')}
-              className={`px-4 sm:px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all ${
+              className={`px-4 sm:px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all ${
                 mode === 'transform' 
-                  ? 'bg-indigo-600 text-white shadow-sm' 
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'bg-indigo-600 text-white shadow-md' 
+                  : 'text-gray-600 hover:bg-white/50'
               }`}
             >
               <ImageIcon className="w-4 h-4" />
@@ -193,10 +190,10 @@ export default function App() {
             </button>
             <button
               onClick={() => handleModeChange('generate')}
-              className={`px-4 sm:px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all ${
+              className={`px-4 sm:px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all ${
                 mode === 'generate' 
-                  ? 'bg-indigo-600 text-white shadow-sm' 
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'bg-indigo-600 text-white shadow-md' 
+                  : 'text-gray-600 hover:bg-white/50'
               }`}
             >
               <PenTool className="w-4 h-4" />
@@ -205,10 +202,10 @@ export default function App() {
             </button>
             <button
               onClick={() => handleModeChange('deck')}
-              className={`px-4 sm:px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all ${
+              className={`px-4 sm:px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all ${
                 mode === 'deck' 
-                  ? 'bg-indigo-600 text-white shadow-sm' 
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'bg-indigo-600 text-white shadow-md' 
+                  : 'text-gray-600 hover:bg-white/50'
               }`}
             >
               <Presentation className="w-4 h-4" />
@@ -225,10 +222,10 @@ export default function App() {
             
             {/* Image Uploader - Only for Transform Mode */}
             {mode === 'transform' && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+              <div className="bg-white/60 backdrop-blur-xl rounded-3xl shadow-xl border border-white/40 overflow-hidden">
+                <div className="p-4 border-b border-white/30 bg-white/20 flex justify-between items-center">
                   <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-                    <ImageIcon className="w-5 h-5 text-indigo-500" />
+                    <ImageIcon className="w-5 h-5 text-indigo-600" />
                     Source Image
                   </h2>
                   {selectedFile && (
@@ -242,9 +239,9 @@ export default function App() {
                   {!previewUrl ? (
                     <div 
                       onClick={() => fileInputRef.current?.click()}
-                      className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition-colors h-64"
+                      className="border-2 border-dashed border-gray-300/60 bg-white/30 rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 hover:bg-white/50 transition-all h-64"
                     >
-                      <div className="bg-indigo-100 p-3 rounded-full mb-4">
+                      <div className="bg-indigo-100/60 p-3 rounded-full mb-4 backdrop-blur-sm">
                         <Upload className="w-6 h-6 text-indigo-600" />
                       </div>
                       <p className="text-sm font-medium text-gray-900">Click to upload or drag and drop</p>
@@ -258,13 +255,13 @@ export default function App() {
                       />
                     </div>
                   ) : (
-                    <div className="relative group rounded-xl overflow-hidden border border-gray-200">
+                    <div className="relative group rounded-2xl overflow-hidden border border-white/40 bg-white/30">
                       <img 
                         src={previewUrl} 
                         alt="Source" 
-                        className="w-full h-auto max-h-[400px] object-contain bg-gray-100" 
+                        className="w-full h-auto max-h-[400px] object-contain" 
                       />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                         <Button 
                           variant="secondary" 
                           size="sm" 
@@ -281,7 +278,7 @@ export default function App() {
             )}
 
             {/* Controls Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-6">
+            <div className="bg-white/60 backdrop-blur-xl rounded-3xl shadow-xl border border-white/40 p-6 space-y-6">
               
               {/* Aspect Ratio (Hidden for Deck mode as it's forced to 16:9) */}
               {mode !== 'deck' && (
@@ -295,28 +292,28 @@ export default function App() {
                    <div className="grid grid-cols-4 gap-2">
                       <button
                         onClick={() => setDeckInputMode('topic')}
-                        className={`flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-medium transition-all ${deckInputMode === 'topic' ? 'bg-indigo-50 border-indigo-600 text-indigo-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                        className={`flex flex-col items-center justify-center p-2 rounded-xl border text-xs font-medium transition-all backdrop-blur-sm ${deckInputMode === 'topic' ? 'bg-indigo-50/60 border-indigo-500/50 text-indigo-700' : 'bg-white/40 border-white/50 text-gray-600 hover:bg-white/60'}`}
                       >
                          <PenTool className="w-4 h-4 mb-1" />
                          Topic
                       </button>
                       <button
                         onClick={() => setDeckInputMode('file')}
-                        className={`flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-medium transition-all ${deckInputMode === 'file' ? 'bg-indigo-50 border-indigo-600 text-indigo-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                        className={`flex flex-col items-center justify-center p-2 rounded-xl border text-xs font-medium transition-all backdrop-blur-sm ${deckInputMode === 'file' ? 'bg-indigo-50/60 border-indigo-500/50 text-indigo-700' : 'bg-white/40 border-white/50 text-gray-600 hover:bg-white/60'}`}
                       >
                          <FileText className="w-4 h-4 mb-1" />
                          File
                       </button>
                       <button
                         onClick={() => setDeckInputMode('url')}
-                        className={`flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-medium transition-all ${deckInputMode === 'url' ? 'bg-indigo-50 border-indigo-600 text-indigo-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                        className={`flex flex-col items-center justify-center p-2 rounded-xl border text-xs font-medium transition-all backdrop-blur-sm ${deckInputMode === 'url' ? 'bg-indigo-50/60 border-indigo-500/50 text-indigo-700' : 'bg-white/40 border-white/50 text-gray-600 hover:bg-white/60'}`}
                       >
                          <Globe className="w-4 h-4 mb-1" />
                          Web
                       </button>
                       <button
                         onClick={() => setDeckInputMode('voice')}
-                        className={`flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-medium transition-all ${deckInputMode === 'voice' ? 'bg-indigo-50 border-indigo-600 text-indigo-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                        className={`flex flex-col items-center justify-center p-2 rounded-xl border text-xs font-medium transition-all backdrop-blur-sm ${deckInputMode === 'voice' ? 'bg-indigo-50/60 border-indigo-500/50 text-indigo-700' : 'bg-white/40 border-white/50 text-gray-600 hover:bg-white/60'}`}
                       >
                          <Mic className="w-4 h-4 mb-1" />
                          Voice
@@ -339,9 +336,9 @@ export default function App() {
                 </label>
 
                 {mode === 'deck' && deckInputMode === 'file' ? (
-                  <div className="border border-gray-300 rounded-xl p-4 bg-gray-50 flex items-center justify-between">
+                  <div className="border border-white/50 rounded-xl p-4 bg-white/40 backdrop-blur-sm flex items-center justify-between">
                      <div className="flex items-center gap-3 overflow-hidden">
-                       <div className="bg-indigo-100 p-2 rounded-lg">
+                       <div className="bg-indigo-100/60 p-2 rounded-lg">
                          <Upload className="w-5 h-5 text-indigo-600" />
                        </div>
                        <div className="truncate">
@@ -381,7 +378,7 @@ export default function App() {
                         value={urlInput}
                         onChange={(e) => setUrlInput(e.target.value)}
                         placeholder="e.g. www.tesla.com or 'Tesla'"
-                        className="pl-10 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3"
+                        className="pl-10 block w-full rounded-xl border-white/50 bg-white/40 backdrop-blur-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 focus:bg-white/70 transition-colors"
                      />
                      <p className="mt-2 text-xs text-gray-500">We will use Google Search to find information.</p>
                   </div>
@@ -397,7 +394,7 @@ export default function App() {
                       mode === 'deck' ? "E.g., A startup creating biodegradable coffee cups from recycled bamboo..." :
                       "E.g., A professional flyer for a jazz concert, dark mood, saxophone illustration..."
                     }
-                    className="w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 min-h-[120px] p-3 text-sm resize-none"
+                    className="w-full rounded-xl border-white/50 bg-white/40 backdrop-blur-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 min-h-[120px] p-3 text-sm resize-none focus:bg-white/70 transition-colors"
                   />
                 )}
               </div>
@@ -420,10 +417,10 @@ export default function App() {
 
           {/* Right Column: Results */}
           <div className="lg:col-span-7 flex flex-col" ref={resultRef}>
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 flex-1 flex flex-col overflow-hidden min-h-[500px]">
-              <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+            <div className="bg-white/60 backdrop-blur-xl rounded-3xl shadow-xl border border-white/40 flex-1 flex flex-col overflow-hidden min-h-[500px]">
+              <div className="p-4 border-b border-white/30 bg-white/20 flex justify-between items-center">
                 <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-                  <Wand2 className="w-5 h-5 text-indigo-500" />
+                  <Wand2 className="w-5 h-5 text-indigo-600" />
                   {mode === 'deck' ? 'Generated Slides' : 'Generated Result'}
                 </h2>
                 
@@ -432,7 +429,7 @@ export default function App() {
                   <a 
                     href={result.imageUrl} 
                     download={`generated-design-${Date.now()}.png`}
-                    className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="inline-flex items-center px-3 py-1.5 border border-white/40 shadow-sm text-xs font-medium rounded text-gray-700 bg-white/50 hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 backdrop-blur-sm"
                   >
                     <Download className="w-3 h-3 mr-1.5" />
                     Download
@@ -440,12 +437,12 @@ export default function App() {
                 )}
               </div>
 
-              <div className="flex-1 flex flex-col relative bg-gray-50/50">
+              <div className="flex-1 flex flex-col relative">
                 
                 {status === 'error' && (
                   <div className="p-8 flex items-center justify-center h-full">
-                    <div className="text-center max-w-md p-6 bg-red-50 rounded-xl border border-red-100">
-                      <div className="bg-red-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <div className="text-center max-w-md p-6 bg-red-50/70 backdrop-blur-md rounded-2xl border border-red-100/50">
+                      <div className="bg-red-100/60 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
                         <AlertCircle className="w-6 h-6 text-red-600" />
                       </div>
                       <h3 className="text-red-900 font-medium mb-1">Generation Failed</h3>
@@ -456,18 +453,18 @@ export default function App() {
 
                 {status === 'idle' && !result && deckResult.length === 0 && (
                   <div className="flex-1 flex items-center justify-center p-8">
-                    <div className="text-center max-w-sm text-gray-400">
-                      <div className="bg-white p-4 rounded-full shadow-sm inline-block mb-4">
-                        {mode === 'transform' ? <ImageIcon className="w-8 h-8 text-indigo-200" /> : 
-                         mode === 'deck' ? <Presentation className="w-8 h-8 text-indigo-200" /> :
-                         <Sparkles className="w-8 h-8 text-indigo-200" />}
+                    <div className="text-center max-w-sm text-gray-500">
+                      <div className="bg-white/40 backdrop-blur-sm p-4 rounded-full shadow-lg inline-block mb-4 border border-white/40">
+                        {mode === 'transform' ? <ImageIcon className="w-8 h-8 text-indigo-400" /> : 
+                         mode === 'deck' ? <Presentation className="w-8 h-8 text-indigo-400" /> :
+                         <Sparkles className="w-8 h-8 text-indigo-400" />}
                       </div>
-                      <p className="font-medium text-gray-500">
+                      <p className="font-medium text-gray-700 text-lg">
                         {mode === 'transform' ? 'Ready to transform' : 
                          mode === 'deck' ? 'Ready to build your deck' : 
                          'Ready to create'}
                       </p>
-                      <p className="text-sm mt-1">
+                      <p className="text-sm mt-2 text-gray-600">
                         {mode === 'transform' ? 'Upload an image and enter a prompt to get started.' : 
                          mode === 'deck' ? 'Choose your source (Topic, File, URL, or Voice) and style.' :
                          'Enter a detailed prompt to design your flyer or banner.'}
@@ -477,18 +474,18 @@ export default function App() {
                 )}
 
                 {(status === 'generating' || status === 'analyzing') && (
-                  <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm flex items-center justify-center">
+                  <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-md flex items-center justify-center">
                     <div className="text-center">
                       <div className="relative">
-                        <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
+                        <div className="w-16 h-16 border-4 border-indigo-200/50 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
                         <div className="absolute inset-0 flex items-center justify-center">
                           <SparkleIcon className="w-6 h-6 text-indigo-600 animate-pulse" />
                         </div>
                       </div>
-                      <p className="text-indigo-900 font-medium animate-pulse">
+                      <p className="text-indigo-900 font-medium animate-pulse text-lg">
                         {status === 'analyzing' ? 'Listening & Analyzing...' : 'Designing your visuals...'}
                       </p>
-                      <p className="text-indigo-500 text-xs mt-1">
+                      <p className="text-indigo-600 text-xs mt-1">
                         {mode === 'deck' ? 'This might take a minute as we process your data' : 'This may take a few seconds'}
                       </p>
                     </div>
@@ -501,12 +498,12 @@ export default function App() {
                     <img 
                       src={result.imageUrl} 
                       alt="Generated" 
-                      className="max-w-full max-h-[600px] object-contain rounded-lg shadow-lg"
+                      className="max-w-full max-h-[600px] object-contain rounded-xl shadow-2xl border border-white/20"
                     />
                     {result.text && (
-                      <div className="mt-4 p-3 bg-white/90 backdrop-blur-sm border border-indigo-100 rounded-lg max-w-2xl shadow-sm">
-                        <p className="text-xs text-gray-600">
-                          <span className="font-semibold text-indigo-600">AI Note:</span> {result.text}
+                      <div className="mt-4 p-4 bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl max-w-2xl shadow-lg">
+                        <p className="text-sm text-gray-700">
+                          <span className="font-semibold text-indigo-600 block mb-1">AI Note</span> {result.text}
                         </p>
                       </div>
                     )}
@@ -525,9 +522,9 @@ export default function App() {
       </main>
 
       {/* Sticky Action Bar */}
-      <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 shadow-lg z-40">
+      <div className="sticky bottom-0 bg-white/60 backdrop-blur-xl border-t border-white/40 p-4 shadow-lg z-40">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="hidden sm:block text-sm text-gray-500">
+          <div className="hidden sm:block text-sm text-gray-600 font-medium">
              {mode === 'transform' 
                ? (selectedFile ? 'Image selected ready for processing' : 'Please upload an image first')
                : mode === 'deck'
@@ -553,7 +550,7 @@ export default function App() {
               (mode === 'generate' && !prompt.trim())
             }
             isLoading={status === 'generating' || status === 'analyzing'}
-            className="w-full sm:w-auto min-w-[200px]"
+            className="w-full sm:w-auto min-w-[200px] shadow-xl shadow-indigo-500/20"
             icon={mode === 'transform' ? <Wand2 className="w-4 h-4" /> : 
                   mode === 'deck' ? <Presentation className="w-4 h-4" /> : 
                   <Sparkles className="w-4 h-4" />}
