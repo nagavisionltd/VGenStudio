@@ -85,6 +85,14 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
     category: 'ecommerce',
     prompt: 'Create a clean, minimalist advertisement background for skincare. Use soft pastel green and white tones. Include organic shapes like leaves and water ripples. Leave a central space for product placement.',
     mode: 'generate'
+  },
+  {
+    id: '11',
+    name: 'Podcast Cover Art',
+    description: 'Bold typography and abstract shapes',
+    category: 'creative',
+    prompt: 'Design a trendy podcast cover art. Use bold, chunky typography for the title. Background should be an abstract collage of geometric shapes in pop colors (teal, coral, mustard).',
+    mode: 'generate'
   }
 ];
 
@@ -94,7 +102,14 @@ export const DECK_STYLES: DeckStyle[] = [
     name: 'Swiss Minimalist',
     description: 'Clean grids, bold Helvetica typography, high contrast.',
     promptModifier: 'Design Style: Swiss International / Bauhaus. LAYOUT: Strict grid system, massive negative space. TYPOGRAPHY: Huge, bold sans-serif headlines (Helvetica style) aligned left. COLORS: Stark Black and White with one bright accent (Red). VIBE: Professional, structured, architectural.',
-    previewColors: { bg: '#ffffff', text: '#000000', accent: '#dc2626', secondary: '#e5e5e5' }
+    previewColors: { bg: '#ffffff', text: '#000000', accent: '#ef4444', secondary: '#e5e5e5' }
+  },
+  {
+    id: 'saas-modern',
+    name: 'SaaS Startup',
+    description: 'Friendly, clean, gradient-heavy aesthetic.',
+    promptModifier: 'Design Style: Modern SaaS / Tech Startup. LAYOUT: Clean, airy, rounded corners, soft drop shadows. TYPOGRAPHY: Friendly geometric sans-serif (Inter, circular). COLORS: White background, Blurple (Blue-Purple) gradients, vibrant primary buttons. VIBE: Optimistic, user-friendly, scalable.',
+    previewColors: { bg: '#ffffff', text: '#111827', accent: '#6366f1', secondary: '#e0e7ff' }
   },
   {
     id: 'tech-noir',
@@ -102,6 +117,13 @@ export const DECK_STYLES: DeckStyle[] = [
     description: 'Dark mode, neon gradients, futuristic data.',
     promptModifier: 'Design Style: Tech Noir / Cyber Future. LAYOUT: Dark mode interface style, HUD elements. TYPOGRAPHY: Sleek monospaced fonts, glowing text effects. COLORS: Deep charcoal background, Neon Cyan and Magenta gradients. VISUALS: Abstract data visualization, circuit lines. VIBE: Innovation, software, future.',
     previewColors: { bg: '#0f172a', text: '#e2e8f0', accent: '#06b6d4', secondary: '#1e293b' }
+  },
+  {
+    id: 'luxury-editorial',
+    name: 'Luxury Editorial',
+    description: 'High-end fashion magazine aesthetic.',
+    promptModifier: 'Design Style: Luxury Editorial / Vogue. LAYOUT: Asymmetrical, lots of whitespace, overlapping elements. TYPOGRAPHY: High-contrast Serif headlines (Didot/Bodoni) paired with small sans-serif captions. COLORS: Warm Beige, Charcoal, Gold accents. VIBE: Expensive, curated, timeless.',
+    previewColors: { bg: '#fdfbf7', text: '#1c1917', accent: '#d4af37', secondary: '#e7e5e4' }
   },
   {
     id: 'eco-modern',

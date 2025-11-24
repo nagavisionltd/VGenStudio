@@ -5,9 +5,10 @@ import { TemplateSelector } from './components/TemplateSelector';
 import { AspectRatioSelector } from './components/AspectRatioSelector';
 import { DeckStyleSelector } from './components/DeckStyleSelector';
 import { SlideGallery } from './components/SlideGallery';
+import { VoiceInput } from './components/VoiceInput';
 import { generateImage, generatePitchDeck } from './services/geminiService';
 import { PresetTemplate, DeckStyle, ProcessingStatus, GenerationResult, AspectRatio, AppMode, DeckInputMode } from './types';
-import { Upload, X, Wand2, Download, Image as ImageIcon, AlertCircle, PenTool, Sparkles, Presentation, FileText, Globe, Link } from 'lucide-react';
+import { Upload, X, Wand2, Download, Image as ImageIcon, AlertCircle, PenTool, Sparkles, Presentation, FileText, Globe, Link, Mic } from 'lucide-react';
 
 export default function App() {
   const [mode, setMode] = useState<AppMode>('transform');
@@ -16,6 +17,10 @@ export default function App() {
   const [deckInputMode, setDeckInputMode] = useState<DeckInputMode>('topic');
   const [deckFile, setDeckFile] = useState<File | null>(null);
   const [urlInput, setUrlInput] = useState('');
+  
+  // Voice State
+  const [voiceBlob, setVoiceBlob] = useState<Blob | null>(null);
+  const [voiceFile, setVoiceFile] = useState<File | null>(null);
 
   // General States
   const [selectedFile, setSelectedFile] = useState<File | null>(null); // For Transform mode
@@ -50,6 +55,8 @@ export default function App() {
     setErrorMsg(null);
     setDeckFile(null);
     setUrlInput('');
+    setVoiceBlob(null);
+    setVoiceFile(null);
     
     // Auto-set aspect ratio for deck
     if (newMode === 'deck') {
@@ -107,6 +114,7 @@ export default function App() {
        if (deckInputMode === 'topic' && !prompt.trim()) return;
        if (deckInputMode === 'url' && !urlInput.trim()) return;
        if (deckInputMode === 'file' && !deckFile) return;
+       if (deckInputMode === 'voice' && !voiceBlob && !voiceFile) return;
     }
     if (mode === 'generate' && !prompt.trim()) return;
 
@@ -127,9 +135,21 @@ export default function App() {
         
         let inputData = prompt;
         if (deckInputMode === 'url') inputData = urlInput;
-        if (deckInputMode === 'file') inputData = ''; // File is passed separately
+        if (deckInputMode === 'file') inputData = ''; 
+        if (deckInputMode === 'voice') inputData = '';
 
-        const slides = await generatePitchDeck(inputData, deckFile, deckInputMode, selectedDeckStyle);
+        // Determine correct audio source (Blob or File)
+        const audioSource = voiceBlob || voiceFile;
+        // Since generatePitchDeck expects Blob | null for audio, and File extends Blob, this is compatible.
+        // However, typescript might complain if strict, but File IS A Blob.
+
+        const slides = await generatePitchDeck(
+          inputData, 
+          deckFile, 
+          audioSource as Blob | null, 
+          deckInputMode, 
+          selectedDeckStyle
+        );
         setDeckResult(slides);
       } else {
         const fileToProcess = mode === 'transform' ? selectedFile : null;
@@ -272,27 +292,34 @@ export default function App() {
               {mode === 'deck' && (
                 <div className="space-y-4">
                    <label className="block text-sm font-medium text-gray-700">Content Source</label>
-                   <div className="grid grid-cols-3 gap-2">
+                   <div className="grid grid-cols-4 gap-2">
                       <button
                         onClick={() => setDeckInputMode('topic')}
-                        className={`flex flex-col items-center justify-center p-3 rounded-lg border text-sm font-medium transition-all ${deckInputMode === 'topic' ? 'bg-indigo-50 border-indigo-600 text-indigo-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                        className={`flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-medium transition-all ${deckInputMode === 'topic' ? 'bg-indigo-50 border-indigo-600 text-indigo-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
                       >
-                         <PenTool className="w-5 h-5 mb-1" />
+                         <PenTool className="w-4 h-4 mb-1" />
                          Topic
                       </button>
                       <button
                         onClick={() => setDeckInputMode('file')}
-                        className={`flex flex-col items-center justify-center p-3 rounded-lg border text-sm font-medium transition-all ${deckInputMode === 'file' ? 'bg-indigo-50 border-indigo-600 text-indigo-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                        className={`flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-medium transition-all ${deckInputMode === 'file' ? 'bg-indigo-50 border-indigo-600 text-indigo-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
                       >
-                         <FileText className="w-5 h-5 mb-1" />
-                         Upload
+                         <FileText className="w-4 h-4 mb-1" />
+                         File
                       </button>
                       <button
                         onClick={() => setDeckInputMode('url')}
-                        className={`flex flex-col items-center justify-center p-3 rounded-lg border text-sm font-medium transition-all ${deckInputMode === 'url' ? 'bg-indigo-50 border-indigo-600 text-indigo-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                        className={`flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-medium transition-all ${deckInputMode === 'url' ? 'bg-indigo-50 border-indigo-600 text-indigo-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
                       >
-                         <Globe className="w-5 h-5 mb-1" />
-                         Website
+                         <Globe className="w-4 h-4 mb-1" />
+                         Web
+                      </button>
+                      <button
+                        onClick={() => setDeckInputMode('voice')}
+                        className={`flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-medium transition-all ${deckInputMode === 'voice' ? 'bg-indigo-50 border-indigo-600 text-indigo-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                      >
+                         <Mic className="w-4 h-4 mb-1" />
+                         Voice
                       </button>
                    </div>
                 </div>
@@ -305,6 +332,7 @@ export default function App() {
                    mode === 'deck' ? (
                       deckInputMode === 'topic' ? 'What is your pitch deck about?' :
                       deckInputMode === 'file' ? 'Upload a document or image' :
+                      deckInputMode === 'voice' ? 'Record or Upload Voice Note' :
                       'Enter Website or Company Name'
                    ) :
                    'Describe what you want to create'}
@@ -338,6 +366,11 @@ export default function App() {
                         onChange={handleDeckFileChange}
                       />
                   </div>
+                ) : mode === 'deck' && deckInputMode === 'voice' ? (
+                  <VoiceInput 
+                    onAudioReady={setVoiceBlob}
+                    onAudioFileSelect={setVoiceFile}
+                  />
                 ) : mode === 'deck' && deckInputMode === 'url' ? (
                   <div className="relative">
                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -436,7 +469,7 @@ export default function App() {
                       </p>
                       <p className="text-sm mt-1">
                         {mode === 'transform' ? 'Upload an image and enter a prompt to get started.' : 
-                         mode === 'deck' ? 'Choose your source (Topic, File, or URL) and style.' :
+                         mode === 'deck' ? 'Choose your source (Topic, File, URL, or Voice) and style.' :
                          'Enter a detailed prompt to design your flyer or banner.'}
                       </p>
                     </div>
@@ -453,7 +486,7 @@ export default function App() {
                         </div>
                       </div>
                       <p className="text-indigo-900 font-medium animate-pulse">
-                        {status === 'analyzing' ? 'Analyzing content...' : 'Designing your visuals...'}
+                        {status === 'analyzing' ? 'Listening & Analyzing...' : 'Designing your visuals...'}
                       </p>
                       <p className="text-indigo-500 text-xs mt-1">
                         {mode === 'deck' ? 'This might take a minute as we process your data' : 'This may take a few seconds'}
@@ -501,6 +534,7 @@ export default function App() {
                ? (selectedDeckStyle 
                   ? (deckInputMode === 'file' && !deckFile ? 'Please select a file' : 
                      deckInputMode === 'url' && !urlInput ? 'Please enter a URL' :
+                     deckInputMode === 'voice' && !voiceBlob && !voiceFile ? 'Please record or upload voice' :
                      deckInputMode === 'topic' && !prompt ? 'Please enter a topic' :
                      'Ready to generate deck')
                   : 'Please select a style')
@@ -515,6 +549,7 @@ export default function App() {
               (mode === 'deck' && deckInputMode === 'topic' && !prompt.trim()) ||
               (mode === 'deck' && deckInputMode === 'url' && !urlInput.trim()) ||
               (mode === 'deck' && deckInputMode === 'file' && !deckFile) ||
+              (mode === 'deck' && deckInputMode === 'voice' && !voiceBlob && !voiceFile) ||
               (mode === 'generate' && !prompt.trim())
             }
             isLoading={status === 'generating' || status === 'analyzing'}

@@ -1,5 +1,7 @@
 {
   "name": "DesignStudio AI",
   "description": "Transform single photos into professional marketing assets, flyers, and lifestyle images using Gemini 2.5 Flash Image.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "microphone"
+  ]
 }

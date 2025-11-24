@@ -1,6 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { GEMINI_MODEL_NAME } from '../constants';
-import { GenerationResult, DeckStyle, SlideContent } from '../types';
+import { GenerationResult, DeckStyle, SlideContent, DeckInputMode } from '../types';
 
 // Ensure API key is available
 if (!process.env.API_KEY) {
@@ -10,9 +10,9 @@ if (!process.env.API_KEY) {
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
 /**
- * Converts a File object to a base64 string.
+ * Converts a File or Blob to a base64 string.
  */
-export const fileToGenerativePart = async (file: File): Promise<{ inlineData: { data: string; mimeType: string } }> => {
+export const fileToGenerativePart = async (file: File | Blob): Promise<{ inlineData: { data: string; mimeType: string } }> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -22,7 +22,7 @@ export const fileToGenerativePart = async (file: File): Promise<{ inlineData: { 
       resolve({
         inlineData: {
           data: base64Data,
-          mimeType: file.type,
+          mimeType: file.type || 'application/octet-stream',
         },
       });
     };
@@ -88,12 +88,13 @@ export const generateImage = async (
 };
 
 /**
- * Analyzes input (text, file, or url) to extract structured slide content.
+ * Analyzes input (text, file, url, or audio) to extract structured slide content.
  */
 const analyzeDeckContent = async (
   input: string,
   file: File | null,
-  mode: 'topic' | 'file' | 'url'
+  audio: Blob | null,
+  mode: DeckInputMode
 ): Promise<SlideContent[]> => {
   const model = 'gemini-2.5-flash';
   
@@ -110,11 +111,19 @@ const analyzeDeckContent = async (
   For each slide, provide:
   - title: The headline for the slide (Keep it short, max 5 words).
   - content: ONE or TWO powerful sentences max. Do not use bullet points unless absolutely necessary. Keep it punchy (max 20 words).
-  - visualPrompt: A highly specific description of the visual scene for this slide. Describe the layout, where the text goes, and the background imagery.`;
+  - visualPrompt: A highly specific description of the visual scene for this slide. Describe the layout, where the text goes, and the background imagery.
+  
+  CRITICAL SAFETY INSTRUCTION:
+  For slide 5 (The Team), the visualPrompt MUST request "abstract avatars", "minimalist icons", "geometric silhouettes", or "stylized character illustrations" to represent team members. 
+  DO NOT ask for "photorealistic people", "photos of faces", "portraits of humans", or "realistic staff photos" as this will trigger safety filters and fail the generation. Keep the team visualization abstract and artistic.`;
 
   const parts: any[] = [];
 
-  if (mode === 'file' && file) {
+  if (mode === 'voice' && audio) {
+    const audioPart = await fileToGenerativePart(audio);
+    parts.push(audioPart);
+    parts.push({ text: "Listen to this audio recording and extract the key pitch deck information from it." });
+  } else if (mode === 'file' && file) {
     const filePart = await fileToGenerativePart(file);
     parts.push(filePart);
     parts.push({ text: "Analyze this document to create a pitch deck." });
@@ -153,51 +162,58 @@ const analyzeDeckContent = async (
     console.error("Failed to parse analysis response", e);
     // Fallback if JSON parsing fails or model hallucinates format
     return [
-      { title: "Title Slide", content: input, visualPrompt: "A professional title slide with abstract geometric shapes" },
-      { title: "The Problem", content: "Defining the core issue", visualPrompt: "Abstract representation of a problem or friction" },
-      { title: "The Solution", content: "Our innovative solution", visualPrompt: "Product shot or solution visualization in a clean environment" },
-      { title: "Market", content: "Growing opportunity", visualPrompt: "Upward trending graph or map visualization" },
-      { title: "Team", content: "Our experts", visualPrompt: "Professional team photos or avatars in a grid" },
+      { title: "Title Slide", content: input || "My Presentation", visualPrompt: "A professional title slide with abstract geometric shapes" },
+      { title: "The Problem", content: "Defining the core issue", visualPrompt: "Abstract representation of a problem or friction, dark tones" },
+      { title: "The Solution", content: "Our innovative solution", visualPrompt: "Product shot or solution visualization in a clean environment, bright" },
+      { title: "Market", content: "Growing opportunity", visualPrompt: "Upward trending graph or map visualization, data driven" },
+      { title: "Team", content: "Our experts", visualPrompt: "Professional team structure visualization with abstract minimalist avatars, no photorealistic faces" },
       { title: "Vision", content: "Future outlook", visualPrompt: "Futuristic and inspiring imagery, horizon or light" },
     ];
   }
 };
 
 /**
- * Generates a pitch deck (set of slides) based on a topic/file/url and style.
+ * Generates a pitch deck (set of slides) based on a topic/file/url/audio and style.
  */
 export const generatePitchDeck = async (
   input: string,
   file: File | null,
-  inputMode: 'topic' | 'file' | 'url',
+  audio: Blob | null,
+  inputMode: DeckInputMode,
   style: DeckStyle
 ): Promise<GenerationResult[]> => {
   
   // Step 1: Analyze content to get structure
-  const slidesContent = await analyzeDeckContent(input, file, inputMode);
+  const slidesContent = await analyzeDeckContent(input, file, audio, inputMode);
 
   // Step 2: Generate images for each slide in parallel
   const promises = slidesContent.map(async (slide) => {
-    // Construct a high-fidelity prompt
-    const prompt = `Create a high-quality presentation slide image.
-    
-    DESIGN SPECIFICATIONS:
-    ${style.promptModifier}
-    
-    SLIDE CONTENT:
-    Headline: "${slide.title}"
-    Body Copy: "${slide.content}"
-    
-    VISUAL SCENE:
-    ${slide.visualPrompt}
-    
-    CRITICAL:
-    - The text MUST be legible, spelled correctly, and integrated into the design.
-    - Do not produce a generic "slide in a computer screen" image. Generate the slide graphic itself (flat).
-    - Respect the margins and whitespace defined in the style.`;
-    
-    const result = await generateImage(prompt, null, '16:9');
-    return { ...result, title: slide.title };
+    try {
+      // Construct a high-fidelity prompt
+      const prompt = `Create a high-quality presentation slide image.
+      
+      DESIGN SPECIFICATIONS:
+      ${style.promptModifier}
+      
+      SLIDE CONTENT:
+      Headline: "${slide.title}"
+      Body Copy: "${slide.content}"
+      
+      VISUAL SCENE:
+      ${slide.visualPrompt}
+      
+      CRITICAL:
+      - The text MUST be legible, spelled correctly, and integrated into the design.
+      - Do not produce a generic "slide in a computer screen" image. Generate the slide graphic itself (flat).
+      - Respect the margins and whitespace defined in the style.`;
+      
+      const result = await generateImage(prompt, null, '16:9');
+      return { ...result, title: slide.title };
+    } catch (error) {
+      console.warn(`Failed to generate slide: ${slide.title}`, error);
+      // Return a valid result with no image so the whole deck doesn't fail
+      return { imageUrl: null, text: "Image generation failed. This may be due to safety filters.", title: slide.title };
+    }
   });
 
   return Promise.all(promises);

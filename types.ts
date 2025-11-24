@@ -2,7 +2,7 @@ export type AspectRatio = '1:1' | '3:4' | '4:3' | '9:16' | '16:9';
 
 export type AppMode = 'transform' | 'generate' | 'deck';
 
-export type DeckInputMode = 'topic' | 'file' | 'url';
+export type DeckInputMode = 'topic' | 'file' | 'url' | 'voice';
 
 export interface PresetTemplate {
   id: string;
