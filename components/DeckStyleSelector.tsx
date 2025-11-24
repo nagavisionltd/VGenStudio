@@ -28,32 +28,50 @@ export const DeckStyleSelector: React.FC<DeckStyleSelectorProps> = ({ onSelect, 
               }
             `}
           >
-            {/* CSS-based Visual Thumbnail */}
+            {/* Advanced CSS-based Slide Thumbnail */}
             <div 
-              className="w-full aspect-video rounded-lg mb-3 shadow-inner relative overflow-hidden border border-gray-100"
+              className="w-full aspect-video rounded-lg mb-3 shadow-sm relative overflow-hidden border border-gray-100 flex flex-col justify-between p-3"
               style={{ backgroundColor: style.previewColors.bg }}
             >
-              {/* Abstract Header / Elements based on style */}
-              <div 
-                className="absolute top-4 left-4 h-2 w-1/3 rounded-sm" 
-                style={{ backgroundColor: style.previewColors.text }} 
-              />
-              <div 
-                className="absolute top-8 left-4 h-2 w-1/2 rounded-sm opacity-50" 
-                style={{ backgroundColor: style.previewColors.text }} 
-              />
-              
-              {/* Graphic Element */}
-              <div 
-                className="absolute bottom-4 right-4 h-12 w-12 rounded-full opacity-80" 
-                style={{ backgroundColor: style.previewColors.accent }} 
-              />
-              
-              {/* Secondary Element */}
-              <div 
-                 className="absolute bottom-0 left-0 w-full h-8 opacity-30"
-                 style={{ backgroundColor: style.previewColors.secondary }}
-              />
+              {/* Header Area */}
+              <div className="flex flex-col gap-1 z-10">
+                 <div 
+                    className="h-2.5 w-3/4 rounded-sm" 
+                    style={{ backgroundColor: style.previewColors.text }} 
+                  />
+                  <div 
+                    className="h-1.5 w-1/2 rounded-sm opacity-60" 
+                    style={{ backgroundColor: style.previewColors.text }} 
+                  />
+              </div>
+
+              {/* Decorative / Graphic Elements */}
+              {style.id === 'swiss-minimal' && (
+                 <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-20" style={{ backgroundColor: style.previewColors.accent }} />
+              )}
+              {style.id === 'tech-noir' && (
+                 <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-transparent to-white/10" />
+              )}
+              {style.id === 'eco-modern' && (
+                 <div className="absolute bottom-[-10px] right-[-10px] w-12 h-12 rounded-full opacity-50" style={{ backgroundColor: style.previewColors.accent }} />
+              )}
+              {style.id === 'bold-pop' && (
+                 <div className="absolute top-2 right-2 border-2 w-8 h-8 rounded-full" style={{ borderColor: style.previewColors.accent }} />
+              )}
+              {style.id === 'corporate-blue' && (
+                 <div className="absolute bottom-0 left-0 right-0 h-1/4 opacity-10" style={{ backgroundColor: style.previewColors.secondary }} />
+              )}
+
+              {/* Content Mockup */}
+              <div className="flex gap-2 items-end mt-2 z-10">
+                 <div className="h-10 w-1/3 rounded opacity-20" style={{ backgroundColor: style.previewColors.text }}></div>
+                 <div className="flex-1 space-y-1">
+                    <div className="h-1 w-full rounded-full opacity-40" style={{ backgroundColor: style.previewColors.text }}></div>
+                    <div className="h-1 w-5/6 rounded-full opacity-40" style={{ backgroundColor: style.previewColors.text }}></div>
+                    <div className="h-1 w-4/6 rounded-full opacity-40" style={{ backgroundColor: style.previewColors.text }}></div>
+                 </div>
+              </div>
+
             </div>
 
             <span className="text-sm font-semibold text-gray-900">{style.name}</span>

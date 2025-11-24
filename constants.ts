@@ -92,36 +92,36 @@ export const DECK_STYLES: DeckStyle[] = [
   {
     id: 'swiss-minimal',
     name: 'Swiss Minimalist',
-    description: 'Clean, grid-based, bold typography, high contrast.',
-    promptModifier: 'in a Swiss International Style. Use a strict grid layout, lots of white space, and bold, black sans-serif typography (Helvetica style). Keep colors to black, white, and one bold accent color like red or blue. The look should be corporate but ultra-modern and clean.',
-    previewColors: { bg: '#ffffff', text: '#000000', accent: '#dc2626', secondary: '#f3f4f6' }
+    description: 'Clean grids, bold Helvetica typography, high contrast.',
+    promptModifier: 'Design Style: Swiss International / Bauhaus. LAYOUT: Strict grid system, massive negative space. TYPOGRAPHY: Huge, bold sans-serif headlines (Helvetica style) aligned left. COLORS: Stark Black and White with one bright accent (Red). VIBE: Professional, structured, architectural.',
+    previewColors: { bg: '#ffffff', text: '#000000', accent: '#dc2626', secondary: '#e5e5e5' }
   },
   {
     id: 'tech-noir',
     name: 'Tech Noir',
-    description: 'Dark mode, neon gradients, futuristic.',
-    promptModifier: 'in a dark futuristic "Tech Noir" style. Use a deep charcoal or black background with glowing neon gradients (cyan and magenta). Use sleek, thin monospaced fonts. Include abstract data visualization elements and grid lines in the background.',
+    description: 'Dark mode, neon gradients, futuristic data.',
+    promptModifier: 'Design Style: Tech Noir / Cyber Future. LAYOUT: Dark mode interface style, HUD elements. TYPOGRAPHY: Sleek monospaced fonts, glowing text effects. COLORS: Deep charcoal background, Neon Cyan and Magenta gradients. VISUALS: Abstract data visualization, circuit lines. VIBE: Innovation, software, future.',
     previewColors: { bg: '#0f172a', text: '#e2e8f0', accent: '#06b6d4', secondary: '#1e293b' }
   },
   {
     id: 'eco-modern',
     name: 'Eco Modern',
     description: 'Natural tones, soft shapes, organic feel.',
-    promptModifier: 'in an "Eco Modern" style. Use a palette of sage greens, creams, and earth tones. Use rounded, soft shapes and organic textures (like paper or stone). The typography should be elegant serif or soft sans-serif. It should feel sustainable and premium.',
-    previewColors: { bg: '#f0fdf4', text: '#14532d', accent: '#86efac', secondary: '#dcfce7' }
+    promptModifier: 'Design Style: Modern Organic. LAYOUT: Soft, fluid layouts with rounded corners. TYPOGRAPHY: Elegant serif headlines mixed with clean sans-serif body. COLORS: Sage green, cream, warm beige, earth tones. VISUALS: Natural textures (paper, stone, leaf shadows). VIBE: Sustainable, calm, premium.',
+    previewColors: { bg: '#f7fee7', text: '#14532d', accent: '#86efac', secondary: '#dcfce7' }
   },
   {
     id: 'bold-pop',
     name: 'Bold Pop',
-    description: 'Vibrant colors, high energy, playful.',
-    promptModifier: 'in a "Bold Pop" style. Use clashing, vibrant colors like yellow, pink, and electric blue. Use heavy, chunky fonts and collage-style elements. The layout should be energetic and dynamic, perfect for a B2C consumer brand.',
+    description: 'Vibrant colors, high energy, brutalist touches.',
+    promptModifier: 'Design Style: Neo-Brutalist Pop. LAYOUT: Asymmetrical, heavy borders, collage style. TYPOGRAPHY: Massive, chunky display fonts. COLORS: Clashing vibrant palette - Bright Yellow, Hot Pink, Electric Blue. VIBE: Energetic, youth-oriented, disruptor brand.',
     previewColors: { bg: '#fef08a', text: '#000000', accent: '#ec4899', secondary: '#3b82f6' }
   },
   {
     id: 'corporate-blue',
-    name: 'Trusted Corporate',
-    description: 'Professional, trustworthy, classic blue.',
-    promptModifier: 'in a classic "Trusted Corporate" style. Use a palette of navy blue, white, and grey. The layout should be traditional and structured. Use clean, professional sans-serif fonts. Include subtle geometric patterns in the background.',
-    previewColors: { bg: '#ffffff', text: '#1e3a8a', accent: '#2563eb', secondary: '#eff6ff' }
+    name: 'Fortune 500',
+    description: 'Trusted, professional, classic corporate structure.',
+    promptModifier: 'Design Style: High-End Corporate. LAYOUT: Clean, balanced 2-column or 3-column layouts. TYPOGRAPHY: Professional sans-serif (Inter/Roboto). COLORS: Deep Navy Blue, White, Cool Grey. VISUALS: Subtle geometric overlays, glass-morphism effects. VIBE: Trustworthy, established, financial.',
+    previewColors: { bg: '#ffffff', text: '#1e3a8a', accent: '#2563eb', secondary: '#f1f5f9' }
   }
 ];

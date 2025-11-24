@@ -97,8 +97,9 @@ const analyzeDeckContent = async (
 ): Promise<SlideContent[]> => {
   const model = 'gemini-2.5-flash';
   
-  const systemInstruction = `You are a professional pitch deck creator. 
-  Your task is to extract key information from the provided context and structure it into exactly 6 key slides for a presentation:
+  const systemInstruction = `You are a world-class venture capital presentation consultant. 
+  Your task is to extract key information from the provided context and structure it into exactly 6 key slides for a pitch deck.
+  The slides are:
   1. Title Slide (Company Name & Tagline)
   2. The Problem (What pain point are they solving?)
   3. The Solution (Product/Service description)
@@ -107,9 +108,9 @@ const analyzeDeckContent = async (
   6. The Vision/Impact (Closing statement)
   
   For each slide, provide:
-  - title: The headline for the slide.
-  - content: Brief, punchy bullet points or text (max 30 words).
-  - visualPrompt: A detailed description of the imagery for this slide. Do NOT ask for text in the image in this field, just the visual scene.`;
+  - title: The headline for the slide (Keep it short, max 5 words).
+  - content: ONE or TWO powerful sentences max. Do not use bullet points unless absolutely necessary. Keep it punchy (max 20 words).
+  - visualPrompt: A highly specific description of the visual scene for this slide. Describe the layout, where the text goes, and the background imagery.`;
 
   const parts: any[] = [];
 
@@ -152,12 +153,12 @@ const analyzeDeckContent = async (
     console.error("Failed to parse analysis response", e);
     // Fallback if JSON parsing fails or model hallucinates format
     return [
-      { title: "Title Slide", content: input, visualPrompt: "A professional title slide" },
-      { title: "The Problem", content: "Defining the core issue", visualPrompt: "Abstract representation of a problem" },
-      { title: "The Solution", content: "Our innovative solution", visualPrompt: "Product shot or solution visualization" },
-      { title: "Market", content: "Growing opportunity", visualPrompt: "Growth chart or map" },
-      { title: "Team", content: "Our experts", visualPrompt: "Professional team photos" },
-      { title: "Vision", content: "Future outlook", visualPrompt: "Futuristic and inspiring imagery" },
+      { title: "Title Slide", content: input, visualPrompt: "A professional title slide with abstract geometric shapes" },
+      { title: "The Problem", content: "Defining the core issue", visualPrompt: "Abstract representation of a problem or friction" },
+      { title: "The Solution", content: "Our innovative solution", visualPrompt: "Product shot or solution visualization in a clean environment" },
+      { title: "Market", content: "Growing opportunity", visualPrompt: "Upward trending graph or map visualization" },
+      { title: "Team", content: "Our experts", visualPrompt: "Professional team photos or avatars in a grid" },
+      { title: "Vision", content: "Future outlook", visualPrompt: "Futuristic and inspiring imagery, horizon or light" },
     ];
   }
 };
@@ -177,19 +178,23 @@ export const generatePitchDeck = async (
 
   // Step 2: Generate images for each slide in parallel
   const promises = slidesContent.map(async (slide) => {
-    // Construct a specific prompt for the image model that combines content + style
-    const prompt = `Design a presentation slide.
-    Style: ${style.promptModifier}
-    Slide Type: ${slide.title}
+    // Construct a high-fidelity prompt
+    const prompt = `Create a high-quality presentation slide image.
     
-    TEXT TO INCLUDE ON SLIDE:
+    DESIGN SPECIFICATIONS:
+    ${style.promptModifier}
+    
+    SLIDE CONTENT:
     Headline: "${slide.title}"
-    Body: "${slide.content}"
+    Body Copy: "${slide.content}"
     
-    VISUALS:
+    VISUAL SCENE:
     ${slide.visualPrompt}
     
-    Ensure the text is legible and follows the requested style colors.`;
+    CRITICAL:
+    - The text MUST be legible, spelled correctly, and integrated into the design.
+    - Do not produce a generic "slide in a computer screen" image. Generate the slide graphic itself (flat).
+    - Respect the margins and whitespace defined in the style.`;
     
     const result = await generateImage(prompt, null, '16:9');
     return { ...result, title: slide.title };
