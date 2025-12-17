@@ -1,3 +1,4 @@
+
 import { PresetTemplate, DeckStyle } from './types';
 
 export const GEMINI_MODEL_NAME = 'gemini-2.5-flash-image';
@@ -10,7 +11,8 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
     description: 'Bright, vibrant summer themed sale post',
     category: 'social',
     prompt: 'Transform this image into a vibrant Instagram summer sale post. Add "SUMMER SALE" text overlay in a bold, fun font. Add tropical leaves and bright yellow accents in the background.',
-    mode: 'transform'
+    mode: 'transform',
+    recommendedRatio: '1:1'
   },
   {
     id: '2',
@@ -18,7 +20,8 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
     description: 'Minimalist marble podium for e-commerce',
     category: 'ecommerce',
     prompt: 'Place this product on a sleek white marble podium. Use soft, high-key lighting to make it look expensive and luxurious. Remove the original background and replace it with a clean, blurred studio background.',
-    mode: 'transform'
+    mode: 'transform',
+    recommendedRatio: '3:4'
   },
   {
     id: '3',
@@ -42,7 +45,8 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
     description: 'Clean background and lighting fix',
     category: 'creative',
     prompt: 'Keep the person exactly as is but improve the lighting to be studio quality. Change the background to a professional blurred office setting.',
-    mode: 'transform'
+    mode: 'transform',
+    recommendedRatio: '1:1'
   },
   {
     id: '6',
@@ -50,17 +54,28 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
     description: 'Urgent red and white promotional banner',
     category: 'social',
     prompt: 'Turn this into a horizontal flash sale web banner. Use a red and white color scheme. Add "FLASH SALE - 50% OFF" text clearly visible next to the subject.',
-    mode: 'transform'
+    mode: 'transform',
+    recommendedRatio: '16:9'
   },
 
   // Generate Templates (Text-to-Image)
+  {
+    id: '12',
+    name: 'YouTube Viral Thumbnail',
+    description: 'High CTR, expressive face, bold colors',
+    category: 'social',
+    prompt: 'Create a high-impact YouTube thumbnail. Visuals: A highly expressive character (shocked or excited) on the left, looking towards the right. Background: Vibrant, glowing, high-contrast abstract or blurred city. Colors: Bright Yellow and Red accents. Lighting: Rim lighting, bold saturation. Leave clear space on the right for title text.',
+    mode: 'generate',
+    recommendedRatio: '16:9'
+  },
   {
     id: '7',
     name: 'Grand Opening Flyer',
     description: 'Professional flyer for a cafe opening',
     category: 'social',
     prompt: 'Create a stylish flyer for a "Grand Opening" of a modern coffee shop. Use warm, inviting colors with an illustration of a latte art coffee cup. Add the text "GRAND OPENING" in elegant typography.',
-    mode: 'generate'
+    mode: 'generate',
+    recommendedRatio: '3:4'
   },
   {
     id: '8',
@@ -68,7 +83,8 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
     description: 'Futuristic banner for tech event',
     category: 'creative',
     prompt: 'Design a wide web banner for a "Future Tech 2025" conference. Use a deep blue and purple gradient background with abstract digital circuit patterns. Include the text "FUTURE TECH 2025" in a sleek, modern font.',
-    mode: 'generate'
+    mode: 'generate',
+    recommendedRatio: '16:9'
   },
   {
     id: '9',
@@ -76,7 +92,8 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
     description: 'Vibrant concert poster design',
     category: 'creative',
     prompt: 'Generate a vibrant poster for a summer music festival. Use bright sunset colors (orange, pink, purple) and silhouette illustrations of a crowd and palm trees. Add text "SUMMER VIBES FEST" in a large, distressed font.',
-    mode: 'generate'
+    mode: 'generate',
+    recommendedRatio: '3:4'
   },
   {
     id: '10',
@@ -84,7 +101,8 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
     description: 'Clean, pastel product advertisement',
     category: 'ecommerce',
     prompt: 'Create a clean, minimalist advertisement background for skincare. Use soft pastel green and white tones. Include organic shapes like leaves and water ripples. Leave a central space for product placement.',
-    mode: 'generate'
+    mode: 'generate',
+    recommendedRatio: '1:1'
   },
   {
     id: '11',
@@ -92,11 +110,26 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
     description: 'Bold typography and abstract shapes',
     category: 'creative',
     prompt: 'Design a trendy podcast cover art. Use bold, chunky typography for the title. Background should be an abstract collage of geometric shapes in pop colors (teal, coral, mustard).',
-    mode: 'generate'
+    mode: 'generate',
+    recommendedRatio: '1:1'
   }
 ];
 
 export const DECK_STYLES: DeckStyle[] = [
+  {
+    id: 'glass-light',
+    name: 'Glass Light',
+    description: 'Frosted glass, soft shadows, airy feel.',
+    promptModifier: 'Design Style: Glassmorphism / Frosted Glass. LAYOUT: Floating translucent cards on blurred backgrounds. TYPOGRAPHY: Clean modern sans-serif. COLORS: White, soft pastels, transparent layers. VISUALS: Depth, blur effects, soft lighting.',
+    previewColors: { bg: '#eef2ff', text: '#374151', accent: '#818cf8', secondary: '#c7d2fe' }
+  },
+  {
+    id: 'glass-dark',
+    name: 'Glass Dark',
+    description: 'Futuristic, dark frosted glass, neon accents.',
+    promptModifier: 'Design Style: Dark Glassmorphism. LAYOUT: Dark translucent cards with glowing edges. TYPOGRAPHY: White sans-serif. COLORS: Deep grey/black backgrounds, neon blue/purple accents. VISUALS: Bokeh, reflections, high contrast.',
+    previewColors: { bg: '#111827', text: '#f3f4f6', accent: '#38bdf8', secondary: '#1f2937' }
+  },
   {
     id: 'swiss-minimal',
     name: 'Swiss Minimalist',

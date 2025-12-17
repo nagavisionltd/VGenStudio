@@ -1,15 +1,18 @@
+
 import React, { useState } from 'react';
 import { GenerationResult } from '../types';
-import { Download, MonitorPlay, FileText, Package } from 'lucide-react';
+import { Download, MonitorPlay, FileText, Package, RefreshCw } from 'lucide-react';
 import { Button } from './Button';
 import { jsPDF } from 'jspdf';
 import JSZip from 'jszip';
 
 interface SlideGalleryProps {
   slides: GenerationResult[];
+  onRegenerateSlide: (index: number) => void;
+  regeneratingIndex: number | null;
 }
 
-export const SlideGallery: React.FC<SlideGalleryProps> = ({ slides }) => {
+export const SlideGallery: React.FC<SlideGalleryProps> = ({ slides, onRegenerateSlide, regeneratingIndex }) => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   if (!slides || slides.length === 0) return null;
@@ -94,7 +97,7 @@ export const SlideGallery: React.FC<SlideGalleryProps> = ({ slides }) => {
                 className="text-xs"
                 icon={<FileText className="w-4 h-4" />}
             >
-                Download PDF
+                PDF
             </Button>
             <Button 
                 variant="primary" 
@@ -104,30 +107,48 @@ export const SlideGallery: React.FC<SlideGalleryProps> = ({ slides }) => {
                 className="text-xs"
                 icon={<Package className="w-4 h-4" />}
             >
-                Download All (ZIP)
+                ZIP
             </Button>
          </div>
        </div>
 
        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
           {slides.map((slide, index) => (
-            <div key={index} className="bg-white/60 backdrop-blur-md rounded-xl shadow-sm border border-white/50 overflow-hidden hover:shadow-lg transition-all group">
+            <div key={index} className="bg-white/60 backdrop-blur-md rounded-xl shadow-sm border border-white/50 overflow-hidden hover:shadow-lg transition-all group relative">
               <div className="border-b border-white/40 bg-white/40 px-4 py-2 flex justify-between items-center">
                  <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
                     {index + 1}. {slide.title || 'Untitled'}
                  </span>
-                 {slide.imageUrl && (
-                   <a 
-                     href={slide.imageUrl} 
-                     download={`slide-${index + 1}.png`}
-                     className="text-gray-500 hover:text-indigo-600 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                     title="Download Slide"
+                 <div className="flex gap-1">
+                   {slide.imageUrl && (
+                    <a 
+                      href={slide.imageUrl} 
+                      download={`slide-${index + 1}.png`}
+                      className="text-gray-500 hover:text-indigo-600 p-1.5 rounded-md hover:bg-white/50 transition-colors"
+                      title="Download Slide"
+                    >
+                      <Download className="w-4 h-4" />
+                    </a>
+                   )}
+                   <button 
+                     onClick={() => onRegenerateSlide(index)}
+                     disabled={regeneratingIndex === index}
+                     className={`text-gray-500 hover:text-indigo-600 p-1.5 rounded-md hover:bg-white/50 transition-colors ${regeneratingIndex === index ? 'animate-spin text-indigo-600' : ''}`}
+                     title="Regenerate this slide"
                    >
-                     <Download className="w-4 h-4" />
-                   </a>
-                 )}
+                     <RefreshCw className="w-4 h-4" />
+                   </button>
+                 </div>
               </div>
               <div className="aspect-video bg-gray-100/50 w-full relative">
+                {regeneratingIndex === index && (
+                  <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-sm flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                      <span className="text-xs font-medium text-indigo-900">Redesigning...</span>
+                    </div>
+                  </div>
+                )}
                 {slide.imageUrl ? (
                   <img 
                     src={slide.imageUrl} 
@@ -135,8 +156,11 @@ export const SlideGallery: React.FC<SlideGalleryProps> = ({ slides }) => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                    No image generated
+                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-sm gap-2">
+                    <div className="p-3 rounded-full bg-gray-200/50">
+                      <FileText className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <span>No image generated</span>
                   </div>
                 )}
               </div>

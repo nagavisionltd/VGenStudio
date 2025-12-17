@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { DECK_STYLES } from '../constants';
 import { DeckStyle } from '../types';
@@ -12,6 +13,36 @@ export const DeckStyleSelector: React.FC<DeckStyleSelectorProps> = ({ onSelect, 
   
   const renderThumbnailContent = (style: DeckStyle) => {
     switch (style.id) {
+      case 'glass-light':
+        return (
+          <div className="w-full h-full relative p-2 overflow-hidden" style={{ backgroundColor: '#eef2ff' }}>
+             {/* Blobs */}
+             <div className="absolute top-[-10px] right-[-10px] w-16 h-16 bg-purple-300 rounded-full blur-xl opacity-60"></div>
+             <div className="absolute bottom-[-10px] left-[-10px] w-12 h-12 bg-blue-300 rounded-full blur-xl opacity-60"></div>
+             {/* Glass Card */}
+             <div className="relative z-10 bg-white/40 backdrop-blur-md border border-white/60 rounded-lg p-2 h-full shadow-sm flex flex-col justify-center">
+               <div className="h-2 w-1/2 bg-indigo-900/10 rounded mb-2"></div>
+               <div className="space-y-1">
+                 <div className="h-1 w-full bg-indigo-900/5 rounded"></div>
+                 <div className="h-1 w-3/4 bg-indigo-900/5 rounded"></div>
+               </div>
+             </div>
+          </div>
+        );
+
+      case 'glass-dark':
+        return (
+          <div className="w-full h-full relative p-2 overflow-hidden" style={{ backgroundColor: '#0f172a' }}>
+             {/* Neon Blob */}
+             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-cyan-500/20 rounded-full blur-xl"></div>
+             {/* Glass Card */}
+             <div className="relative z-10 bg-slate-800/40 backdrop-blur-md border border-white/10 rounded-lg p-2 h-full shadow-lg flex flex-col justify-center items-center text-center">
+               <div className="text-[10px] text-white font-medium mb-1 tracking-wider">FUTURE</div>
+               <div className="h-0.5 w-8 bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div>
+             </div>
+          </div>
+        );
+
       case 'swiss-minimal':
         return (
           <div className="w-full h-full relative p-2 font-sans" style={{ backgroundColor: style.previewColors.bg }}>
@@ -161,18 +192,20 @@ export const DeckStyleSelector: React.FC<DeckStyleSelectorProps> = ({ onSelect, 
     <div className="space-y-4">
       <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
         <Palette className="w-4 h-4 text-indigo-500" />
-        Choose Presentation Style
+        Presentation Style <span className="text-xs text-gray-400 font-normal">(Auto-selected)</span>
       </h3>
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Slider Carousel Container */}
+      <div className="flex overflow-x-auto pb-4 gap-4 snap-x -mx-2 px-2 scroll-smooth">
         {DECK_STYLES.map((style) => (
           <button
             key={style.id}
             onClick={() => onSelect(style)}
             className={`
-              relative group flex flex-col items-start p-3 rounded-xl border text-left transition-all duration-200 backdrop-blur-sm
+              flex-none w-40 sm:w-48 snap-center
+              relative group flex flex-col items-start p-3 rounded-xl border text-left transition-all duration-300 backdrop-blur-sm
               ${selectedStyleId === style.id 
-                ? 'border-indigo-500/50 bg-indigo-50/50 ring-1 ring-indigo-500/50 shadow-md' 
-                : 'border-white/40 bg-white/40 hover:border-white/60 hover:bg-white/60 hover:shadow-md hover:-translate-y-0.5'
+                ? 'border-indigo-500/50 bg-indigo-50/50 ring-1 ring-indigo-500/50 shadow-md scale-100' 
+                : 'border-white/40 bg-white/40 hover:border-white/60 hover:bg-white/60 hover:shadow-md opacity-80 hover:opacity-100 scale-95 hover:scale-100'
               }
             `}
           >
@@ -181,7 +214,7 @@ export const DeckStyleSelector: React.FC<DeckStyleSelectorProps> = ({ onSelect, 
                {renderThumbnailContent(style)}
             </div>
 
-            <span className="text-sm font-semibold text-gray-900">{style.name}</span>
+            <span className="text-sm font-semibold text-gray-900 truncate w-full">{style.name}</span>
             <span className="text-xs text-gray-500 mt-1 line-clamp-2">{style.description}</span>
           </button>
         ))}

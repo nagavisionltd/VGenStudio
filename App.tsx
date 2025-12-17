@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Button } from './components/Button';
@@ -6,12 +7,14 @@ import { AspectRatioSelector } from './components/AspectRatioSelector';
 import { DeckStyleSelector } from './components/DeckStyleSelector';
 import { SlideGallery } from './components/SlideGallery';
 import { VoiceInput } from './components/VoiceInput';
-import { generateImage, generatePitchDeck } from './services/geminiService';
-import { PresetTemplate, DeckStyle, ProcessingStatus, GenerationResult, AspectRatio, AppMode, DeckInputMode } from './types';
-import { Upload, X, Wand2, Download, Image as ImageIcon, AlertCircle, PenTool, Sparkles, Presentation, FileText, Globe, Link, Mic } from 'lucide-react';
+import { generateImage, generatePitchDeck, optimizePrompt, generateSingleSlide } from './services/geminiService';
+import { PresetTemplate, DeckStyle, ProcessingStatus, GenerationResult, AspectRatio, AppMode, DeckInputMode, HistoryItem, SlideContent } from './types';
+import { Upload, X, Wand2, Download, Image as ImageIcon, AlertCircle, PenTool, Sparkles, Presentation, FileText, Globe, Link, Mic, Clock, ArrowLeft, History, FileWarning } from 'lucide-react';
+import { DECK_STYLES } from './constants';
 
 export default function App() {
   const [mode, setMode] = useState<AppMode>('transform');
+  const [showHistory, setShowHistory] = useState(false);
   
   // Deck Specific States
   const [deckInputMode, setDeckInputMode] = useState<DeckInputMode>('topic');
@@ -28,35 +31,125 @@ export default function App() {
   
   // Prompt & Settings
   const [prompt, setPrompt] = useState('');
+  const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
   
   // Selection State
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
-  const [selectedDeckStyle, setSelectedDeckStyle] = useState<DeckStyle | null>(null);
+  // Initialize with a default style (First one: Glass Light) so user isn't forced to choose
+  const [selectedDeckStyle, setSelectedDeckStyle] = useState<DeckStyle | null>(DECK_STYLES[0]);
 
   // Results State
   const [status, setStatus] = useState<ProcessingStatus>('idle');
+  const [progressMessage, setProgressMessage] = useState<string>('');
   const [result, setResult] = useState<GenerationResult | null>(null); // For Transform/Generate
   const [deckResult, setDeckResult] = useState<GenerationResult[]>([]); // For Deck
+  const [rawDeckSlides, setRawDeckSlides] = useState<SlideContent[]>([]); // Keep raw structured content for regeneration
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [regeneratingSlideIndex, setRegeneratingSlideIndex] = useState<number | null>(null);
+
+  // History State
+  const [history, setHistory] = useState<HistoryItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('nagaxstudio_history');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.warn("Failed to load history", e);
+      return [];
+    }
+  });
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const deckFileInputRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
+  // Save history to local storage whenever it changes, but EXCLUDE large base64 images
+  useEffect(() => {
+    const saveToStorage = () => {
+      try {
+        // Create a lightweight version for storage (exclude base64 images to prevent QuotaExceededError)
+        // We keep the entries so users see their prompt history, but images will expire on reload.
+        const storageHistory = history.map(item => ({
+          ...item,
+          thumbnail: item.thumbnail?.startsWith('data:') ? '' : item.thumbnail,
+          results: item.results.map(r => ({
+            ...r,
+            imageUrl: r.imageUrl?.startsWith('data:') ? '' : r.imageUrl
+          }))
+        }));
+        localStorage.setItem('nagaxstudio_history', JSON.stringify(storageHistory));
+      } catch (e) {
+        console.error("Failed to save history to local storage (Storage Full)", e);
+        // Optionally try to clear old items or warn
+      }
+    };
+    saveToStorage();
+  }, [history]);
+
+  const addToHistory = (
+    resultData: GenerationResult | GenerationResult[], 
+    currentMode: AppMode,
+    currentPrompt: string
+  ) => {
+    const isDeck = Array.isArray(resultData);
+    // Get thumbnail from first result or single result
+    const thumbnail = isDeck 
+      ? (resultData[0]?.imageUrl || '') 
+      : (resultData as GenerationResult).imageUrl || '';
+
+    if (!thumbnail) return;
+
+    const newItem: HistoryItem = {
+      id: Date.now().toString(),
+      timestamp: Date.now(),
+      mode: currentMode,
+      thumbnail,
+      results: isDeck ? (resultData as GenerationResult[]) : [resultData as GenerationResult],
+      prompt: currentPrompt
+    };
+
+    setHistory(prev => [newItem, ...prev].slice(0, 20)); // Keep last 20
+  };
+
+  const loadHistoryItem = (item: HistoryItem) => {
+    setMode(item.mode);
+    setPrompt(item.prompt);
+    
+    if (item.mode === 'deck') {
+      setDeckResult(item.results);
+      setRawDeckSlides([]); // Cannot regenerate old decks fully without raw content
+    } else {
+      setResult(item.results[0]);
+    }
+    
+    setShowHistory(false);
+    setStatus('success');
+    
+    setTimeout(() => {
+      resultRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+
   const handleModeChange = (newMode: AppMode) => {
     setMode(newMode);
+    setShowHistory(false);
     setResult(null);
     setDeckResult([]);
     setStatus('idle');
     setPrompt('');
     setSelectedTemplateId(null);
-    setSelectedDeckStyle(null);
+    // When switching to deck mode, ensure a default style is set
+    if (newMode === 'deck') {
+        setSelectedDeckStyle(DECK_STYLES[0]);
+    } else {
+        setSelectedDeckStyle(null);
+    }
     setErrorMsg(null);
     setDeckFile(null);
     setUrlInput('');
     setVoiceBlob(null);
     setVoiceFile(null);
+    setProgressMessage('');
     
     // Auto-set aspect ratio for deck
     if (newMode === 'deck') {
@@ -64,6 +157,14 @@ export default function App() {
     } else {
       setAspectRatio('1:1');
     }
+  };
+
+  const handleEnhancePrompt = async () => {
+    if (!prompt.trim()) return;
+    setIsEnhancingPrompt(true);
+    const optimized = await optimizePrompt(prompt);
+    setPrompt(optimized);
+    setIsEnhancingPrompt(false);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,16 +202,42 @@ export default function App() {
   const handleTemplateSelect = (template: PresetTemplate) => {
     setPrompt(template.prompt);
     setSelectedTemplateId(template.id);
+    if (template.recommendedRatio) {
+      setAspectRatio(template.recommendedRatio);
+    }
   };
 
   const handleDeckStyleSelect = (style: DeckStyle) => {
     setSelectedDeckStyle(style);
   };
 
+  const handleRegenerateSlide = async (index: number) => {
+    const styleToUse = selectedDeckStyle || DECK_STYLES[0];
+    if (!styleToUse || rawDeckSlides.length === 0) {
+      alert("Cannot regenerate slide: missing context or style.");
+      return;
+    }
+    
+    setRegeneratingSlideIndex(index);
+    try {
+      const newSlideResult = await generateSingleSlide(rawDeckSlides[index], styleToUse);
+      
+      setDeckResult(prev => {
+        const updated = [...prev];
+        updated[index] = newSlideResult;
+        return updated;
+      });
+      
+    } catch (error) {
+      console.error("Slide regeneration failed", error);
+    } finally {
+      setRegeneratingSlideIndex(null);
+    }
+  };
+
   const handleGenerate = async () => {
     if (mode === 'transform' && !selectedFile) return;
     if (mode === 'deck') {
-       if (!selectedDeckStyle) return;
        if (deckInputMode === 'topic' && !prompt.trim()) return;
        if (deckInputMode === 'url' && !urlInput.trim()) return;
        if (deckInputMode === 'file' && !deckFile) return;
@@ -119,6 +246,7 @@ export default function App() {
     if (mode === 'generate' && !prompt.trim()) return;
 
     setStatus(mode === 'deck' ? 'analyzing' : 'generating');
+    setProgressMessage(mode === 'deck' ? 'Analyzing content...' : 'Generating visuals...');
     setResult(null);
     setDeckResult([]);
     setErrorMsg(null);
@@ -131,7 +259,7 @@ export default function App() {
 
     try {
       if (mode === 'deck') {
-        if (!selectedDeckStyle) throw new Error("Please select a deck style");
+        const styleToUse = selectedDeckStyle || DECK_STYLES[0];
         
         let inputData = prompt;
         if (deckInputMode === 'url') inputData = urlInput;
@@ -140,18 +268,24 @@ export default function App() {
 
         const audioSource = voiceBlob || voiceFile;
 
-        const slides = await generatePitchDeck(
+        const { results, rawSlides } = await generatePitchDeck(
           inputData, 
           deckFile, 
           audioSource as Blob | null, 
           deckInputMode, 
-          selectedDeckStyle
+          styleToUse,
+          (msg) => setProgressMessage(msg)
         );
-        setDeckResult(slides);
+        
+        setRawDeckSlides(rawSlides);
+        setDeckResult(results);
+        addToHistory(results, 'deck', inputData || "Pitch Deck");
+
       } else {
         const fileToProcess = mode === 'transform' ? selectedFile : null;
         const data = await generateImage(prompt, fileToProcess, aspectRatio);
         setResult(data);
+        addToHistory(data, mode, prompt);
       }
       setStatus('success');
     } catch (error: any) {
@@ -167,6 +301,65 @@ export default function App() {
     };
   }, [previewUrl]);
 
+  // View: History List
+  if (showHistory) {
+    return (
+      <div className="min-h-screen flex flex-col font-sans text-gray-900">
+        <Header />
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+           <div className="flex items-center gap-4 mb-8">
+              <button 
+                onClick={() => setShowHistory(false)}
+                className="p-2 rounded-full bg-white/40 hover:bg-white/60 backdrop-blur-sm border border-white/50 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <h1 className="text-2xl font-bold">Design History</h1>
+           </div>
+
+           {history.length === 0 ? (
+             <div className="text-center py-20 text-gray-500 bg-white/30 backdrop-blur-md rounded-3xl border border-white/40">
+                <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>No history yet. Start creating!</p>
+             </div>
+           ) : (
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {history.map((item) => (
+                  <div key={item.id} className="group bg-white/60 backdrop-blur-md rounded-xl border border-white/50 overflow-hidden hover:shadow-xl transition-all flex flex-col h-full">
+                    <div className="aspect-video bg-gray-100/50 relative overflow-hidden flex items-center justify-center">
+                       {item.thumbnail ? (
+                         <img src={item.thumbnail} alt="Thumbnail" className="w-full h-full object-cover" />
+                       ) : (
+                         <div className="flex flex-col items-center justify-center text-gray-400 gap-2">
+                            <FileWarning className="w-8 h-8 opacity-50" />
+                            <span className="text-xs font-medium uppercase tracking-wider">Image Expired</span>
+                         </div>
+                       )}
+                       
+                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          {/* If image is expired, user can essentially only 'reload' the prompt settings, not the image */}
+                          <Button size="sm" onClick={() => loadHistoryItem(item)}>
+                            {item.thumbnail ? 'View' : 'Reload Prompt'}
+                          </Button>
+                       </div>
+                       <div className="absolute top-2 right-2 px-2 py-1 bg-black/50 text-white text-xs rounded-full backdrop-blur-md">
+                          {item.mode === 'deck' ? 'Pitch Deck' : item.mode === 'transform' ? 'Transform' : 'Image'}
+                       </div>
+                    </div>
+                    <div className="p-4 flex-1">
+                       <p className="text-xs text-gray-500 mb-1">{new Date(item.timestamp).toLocaleDateString()} {new Date(item.timestamp).toLocaleTimeString()}</p>
+                       <p className="text-sm font-medium text-gray-900 line-clamp-2">{item.prompt || 'Audio/File Input'}</p>
+                    </div>
+                  </div>
+                ))}
+             </div>
+           )}
+        </main>
+      </div>
+    );
+  }
+
+  // View: Main App
   return (
     <div className="min-h-screen flex flex-col font-sans text-gray-900">
       <Header />
@@ -174,7 +367,7 @@ export default function App() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {/* Mode Tabs */}
-        <div className="flex justify-center mb-8">
+        <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
           <div className="bg-white/40 backdrop-blur-md p-1 rounded-2xl shadow-lg border border-white/50 inline-flex flex-wrap justify-center gap-1">
             <button
               onClick={() => handleModeChange('transform')}
@@ -213,6 +406,14 @@ export default function App() {
               <span className="sm:hidden">Deck</span>
             </button>
           </div>
+
+          <button 
+             onClick={() => setShowHistory(true)}
+             className="px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all bg-white/40 hover:bg-white/60 text-gray-700 border border-white/50 backdrop-blur-sm"
+          >
+             <History className="w-4 h-4" />
+             History
+          </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
@@ -324,16 +525,30 @@ export default function App() {
 
               {/* Dynamic Input Fields */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {mode === 'transform' ? 'How should we transform this?' : 
-                   mode === 'deck' ? (
-                      deckInputMode === 'topic' ? 'What is your pitch deck about?' :
-                      deckInputMode === 'file' ? 'Upload a document or image' :
-                      deckInputMode === 'voice' ? 'Record or Upload Voice Note' :
-                      'Enter Website or Company Name'
-                   ) :
-                   'Describe what you want to create'}
-                </label>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    {mode === 'transform' ? 'How should we transform this?' : 
+                    mode === 'deck' ? (
+                        deckInputMode === 'topic' ? 'What is your pitch deck about?' :
+                        deckInputMode === 'file' ? 'Upload a document or image' :
+                        deckInputMode === 'voice' ? 'Record or Upload Voice Note' :
+                        'Enter Website or Company Name'
+                    ) :
+                    'Describe what you want to create'}
+                  </label>
+                  {/* Magic Enhance Button */}
+                  {(mode === 'generate' || mode === 'transform' || (mode === 'deck' && deckInputMode === 'topic')) && (
+                    <button 
+                      onClick={handleEnhancePrompt}
+                      disabled={isEnhancingPrompt || !prompt}
+                      className="text-xs flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium disabled:opacity-50 transition-colors"
+                      title="Rewrites your prompt to be more artistic and detailed using Gemini"
+                    >
+                       <Sparkles className={`w-3 h-3 ${isEnhancingPrompt ? 'animate-spin' : ''}`} />
+                       {isEnhancingPrompt ? 'Enhancing...' : 'Magic Enhance'}
+                    </button>
+                  )}
+                </div>
 
                 {mode === 'deck' && deckInputMode === 'file' ? (
                   <div className="border border-white/50 rounded-xl p-4 bg-white/40 backdrop-blur-sm flex items-center justify-between">
@@ -394,7 +609,7 @@ export default function App() {
                       mode === 'deck' ? "E.g., A startup creating biodegradable coffee cups from recycled bamboo..." :
                       "E.g., A professional flyer for a jazz concert, dark mood, saxophone illustration..."
                     }
-                    className="w-full rounded-xl border-white/50 bg-white/40 backdrop-blur-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 min-h-[120px] p-3 text-sm resize-none focus:bg-white/70 transition-colors"
+                    className="w-full rounded-xl border-white/50 bg-white/40 backdrop-blur-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 min-h-[120px] p-3 text-sm resize-none focus:bg-white/70 transition-colors placeholder-gray-400"
                   />
                 )}
               </div>
@@ -440,13 +655,16 @@ export default function App() {
               <div className="flex-1 flex flex-col relative">
                 
                 {status === 'error' && (
-                  <div className="p-8 flex items-center justify-center h-full">
+                  <div className="p-8 flex flex-col items-center justify-center h-full gap-4">
                     <div className="text-center max-w-md p-6 bg-red-50/70 backdrop-blur-md rounded-2xl border border-red-100/50">
                       <div className="bg-red-100/60 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
                         <AlertCircle className="w-6 h-6 text-red-600" />
                       </div>
                       <h3 className="text-red-900 font-medium mb-1">Generation Failed</h3>
-                      <p className="text-red-600 text-sm">{errorMsg}</p>
+                      <p className="text-red-600 text-sm mb-4">{errorMsg}</p>
+                      <Button variant="danger" size="sm" onClick={handleGenerate}>
+                         Try Again
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -483,10 +701,10 @@ export default function App() {
                         </div>
                       </div>
                       <p className="text-indigo-900 font-medium animate-pulse text-lg">
-                        {status === 'analyzing' ? 'Listening & Analyzing...' : 'Designing your visuals...'}
+                        {progressMessage || 'Processing...'}
                       </p>
                       <p className="text-indigo-600 text-xs mt-1">
-                        {mode === 'deck' ? 'This might take a minute as we process your data' : 'This may take a few seconds'}
+                        AI is thinking...
                       </p>
                     </div>
                   </div>
@@ -512,7 +730,11 @@ export default function App() {
 
                 {/* Deck Result (Grid) */}
                 {mode === 'deck' && deckResult.length > 0 && (
-                   <SlideGallery slides={deckResult} />
+                   <SlideGallery 
+                      slides={deckResult} 
+                      onRegenerateSlide={handleRegenerateSlide}
+                      regeneratingIndex={regeneratingSlideIndex}
+                   />
                 )}
 
               </div>
@@ -542,7 +764,6 @@ export default function App() {
             onClick={handleGenerate}
             disabled={
               (mode === 'transform' && !selectedFile) || 
-              (mode === 'deck' && !selectedDeckStyle) || 
               (mode === 'deck' && deckInputMode === 'topic' && !prompt.trim()) ||
               (mode === 'deck' && deckInputMode === 'url' && !urlInput.trim()) ||
               (mode === 'deck' && deckInputMode === 'file' && !deckFile) ||
