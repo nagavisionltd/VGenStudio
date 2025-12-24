@@ -31,7 +31,23 @@ export interface DeckStyle {
 export interface GenerationResult {
   imageUrl: string | null;
   text: string | null;
-  title?: string; // Optional title for deck slides
+  title?: string;
+}
+
+export interface StrategyReport {
+  summary: string;
+  swot: {
+    strengths: string[];
+    weaknesses: string[];
+    opportunities: string[];
+    threats: string[];
+  };
+  marketStrategy: string;
+  actionPlan: {
+    immediate: string[];
+    midTerm: string[];
+    longTerm: string[];
+  };
 }
 
 export interface SlideContent {
@@ -40,13 +56,20 @@ export interface SlideContent {
   visualPrompt: string;
 }
 
+export interface DeckGenerationResponse {
+  results: GenerationResult[];
+  rawSlides: SlideContent[];
+  strategy: StrategyReport;
+}
+
 export interface HistoryItem {
   id: string;
   timestamp: number;
   mode: AppMode;
-  thumbnail: string; // The first image url
-  results: GenerationResult[]; // Array for decks, single item array for others
+  thumbnail: string;
+  results: GenerationResult[];
   prompt: string;
+  strategy?: StrategyReport;
 }
 
 export type ProcessingStatus = 'idle' | 'uploading' | 'analyzing' | 'generating' | 'success' | 'error';
